@@ -1,0 +1,390 @@
+:root {
+  color-scheme: dark;
+  font-family: "Microsoft YaHei", "PingFang SC", system-ui, sans-serif;
+  background: #151616;
+  color: #f4f0e7;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 50% 12%, rgba(201, 48, 48, 0.18), transparent 30%),
+    linear-gradient(135deg, #191b1a 0%, #222420 52%, #161616 100%);
+}
+
+button {
+  font: inherit;
+}
+
+.table {
+  width: min(1440px, 100%);
+  min-height: 100vh;
+  margin: 0 auto;
+  padding: 20px;
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  grid-template-rows: auto auto auto 1fr;
+  gap: 16px;
+}
+
+.topbar,
+.arena,
+.players,
+.hand-zone,
+.log {
+  border: 1px solid rgba(244, 240, 231, 0.12);
+  background: rgba(18, 19, 18, 0.72);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.28);
+}
+
+.topbar {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 20px;
+}
+
+.eyebrow {
+  margin: 0 0 4px;
+  font-size: 12px;
+  color: #b8ad9e;
+}
+
+h1,
+h2 {
+  margin: 0;
+  letter-spacing: 0;
+}
+
+h1 {
+  font-size: 30px;
+}
+
+h2 {
+  font-size: 20px;
+}
+
+.controls,
+.buttons,
+.action-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.icon-button,
+.primary,
+.target {
+  border: 0;
+  min-height: 40px;
+  padding: 0 14px;
+  color: #f4f0e7;
+  background: #3b423b;
+  cursor: pointer;
+}
+
+.primary {
+  background: #b73632;
+  min-width: 104px;
+  font-weight: 700;
+}
+
+.danger {
+  background: #c56a25;
+}
+
+.target {
+  background: #52614a;
+}
+
+.arena {
+  padding: 20px;
+  display: grid;
+  grid-template-columns: minmax(240px, 360px) 1fr;
+  gap: 18px;
+}
+
+.boss-card {
+  position: relative;
+  min-height: 310px;
+  border-radius: 8px;
+  padding: 24px;
+  color: #121312;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.92), rgba(228, 219, 200, 0.96)),
+    repeating-linear-gradient(45deg, transparent 0 14px, rgba(0, 0, 0, 0.04) 14px 16px);
+}
+
+.boss-card.red {
+  color: #961f26;
+}
+
+.corner {
+  position: absolute;
+  left: 18px;
+  top: 14px;
+  display: grid;
+  line-height: 1;
+  font-weight: 900;
+  font-size: 28px;
+}
+
+.corner span {
+  font-size: 22px;
+}
+
+.boss-title {
+  margin-top: 72px;
+  font-size: 28px;
+  font-weight: 900;
+  text-align: center;
+}
+
+.boss-stat {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-top: 18px;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.08);
+}
+
+.boss-stat strong {
+  font-size: 26px;
+}
+
+.hp {
+  height: 12px;
+  margin-top: 18px;
+  background: rgba(0, 0, 0, 0.18);
+  overflow: hidden;
+}
+
+.hp i {
+  display: block;
+  height: 100%;
+  background: #b73632;
+}
+
+.boss-card p {
+  margin: 18px 0 0;
+  text-align: center;
+}
+
+.pile-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(120px, 1fr));
+  gap: 12px;
+}
+
+.pile {
+  min-height: 158px;
+  padding: 16px;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.055);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+}
+
+.deck-back {
+  width: 68px;
+  height: 94px;
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, transparent 25%, rgba(255, 255, 255, 0.18) 25% 30%, transparent 30% 55%, rgba(255, 255, 255, 0.18) 55% 60%, transparent 60%),
+    #8f2e2e;
+  border: 2px solid rgba(255, 255, 255, 0.58);
+}
+
+.pile strong {
+  font-size: 24px;
+}
+
+.players {
+  padding: 14px;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(120px, 1fr));
+  gap: 10px;
+}
+
+.player {
+  min-height: 60px;
+  padding: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.055);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.player.active {
+  border-color: #d7b35a;
+  background: rgba(215, 179, 90, 0.16);
+}
+
+.hand-zone {
+  padding: 18px;
+}
+
+.turn-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  align-items: start;
+}
+
+.message {
+  margin: 0;
+  color: #d9d2c4;
+  text-align: right;
+}
+
+.hand {
+  min-height: 152px;
+  margin-top: 18px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-content: flex-start;
+}
+
+.card {
+  width: 92px;
+  height: 128px;
+  border: 0;
+  border-radius: 8px;
+  padding: 10px;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  text-align: left;
+  color: #171717;
+  background: #f6f0e4;
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.24);
+  cursor: pointer;
+}
+
+.card.red {
+  color: #a5282d;
+}
+
+.card.selected {
+  outline: 3px solid #d7b35a;
+  transform: translateY(-8px);
+}
+
+.card.skill {
+  color: #f7ead2;
+  background: linear-gradient(145deg, #644936, #9a362f);
+}
+
+.card:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.rank {
+  font-size: 22px;
+  font-weight: 900;
+}
+
+.suit {
+  place-self: center;
+  font-size: 38px;
+}
+
+.value {
+  justify-self: end;
+  font-weight: 700;
+}
+
+.action-row {
+  justify-content: space-between;
+  margin-top: 18px;
+}
+
+.meter {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  color: #cfc5b5;
+}
+
+.log {
+  grid-row: 2 / -1;
+  grid-column: 2;
+  padding: 18px;
+  overflow: auto;
+  max-height: calc(100vh - 112px);
+}
+
+.log p {
+  margin: 12px 0 0;
+  color: #d3c9b8;
+  line-height: 1.5;
+}
+
+.empty-boss {
+  min-height: 310px;
+  display: grid;
+  place-items: center;
+  border: 1px dashed rgba(255, 255, 255, 0.24);
+  color: #d9d2c4;
+}
+
+@media (max-width: 980px) {
+  .table {
+    grid-template-columns: 1fr;
+  }
+
+  .log {
+    grid-column: auto;
+    grid-row: auto;
+    max-height: none;
+  }
+
+  .arena {
+    grid-template-columns: 1fr;
+  }
+
+  .pile-grid,
+  .players {
+    grid-template-columns: repeat(2, minmax(120px, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .table {
+    padding: 10px;
+  }
+
+  .topbar,
+  .turn-head,
+  .action-row {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .message {
+    text-align: left;
+  }
+
+  .pile-grid,
+  .players {
+    grid-template-columns: 1fr;
+  }
+
+  .card {
+    width: 78px;
+    height: 110px;
+  }
+}

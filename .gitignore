@@ -1,0 +1,21 @@
+# Excel temporary lock files
+~$*.xlsx
+
+# Local agent/tool state
+.agents/
+
+# Dependencies and build output
+node_modules/
+dist/
+build/
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Environment files
+.env
+.env.*
