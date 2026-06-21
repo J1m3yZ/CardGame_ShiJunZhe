@@ -1,6 +1,12 @@
 const SUITS = ['spades', 'hearts', 'clubs', 'diamonds'];
 const SUIT_LABEL = { spades: '♠', hearts: '♥', clubs: '♣', diamonds: '♦' };
 const SUIT_NAME = { spades: '黑桃', hearts: '红桃', clubs: '梅花', diamonds: '方块' };
+const SUIT_EFFECTS = {
+  spades: '永久削减当前 Boss 攻击力',
+  hearts: '从弃牌堆回收卡牌到抽牌堆底',
+  clubs: '本次造成的伤害翻倍',
+  diamonds: '从出牌者开始轮流抽牌',
+};
 const RANKS = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10'];
 const BOSS_RANKS = ['J', 'Q', 'K'];
 const app = document.querySelector('#app');
@@ -38,7 +44,9 @@ function newGame(playerCount) {
     players,
     currentPlayer: 0,
     selectedHandIds: new Set(),
+    selectedHandOrder: [],
     selectedDefenseIds: new Set(),
+    selectedDefenseOrder: [],
     drawPile,
     discardPile: [],
     extraZone: [],
@@ -121,11 +129,13 @@ function pushLog(game, text) {
 }
 
 function selectedPlayCards() {
-  return currentPlayer().hand.filter((card) => state.selectedHandIds.has(card.id));
+  const handById = new Map(currentPlayer().hand.map((card) => [card.id, card]));
+  return state.selectedHandOrder.map((id) => handById.get(id)).filter(Boolean);
 }
 
 function selectedDefenseCards() {
-  return currentPlayer().hand.filter((card) => state.selectedDefenseIds.has(card.id));
+  const handById = new Map(currentPlayer().hand.map((card) => [card.id, card]));
+  return state.selectedDefenseOrder.map((id) => handById.get(id)).filter(Boolean);
 }
 
 function validatePlay(cards) {
@@ -156,6 +166,7 @@ function playSelected() {
   const player = currentPlayer();
   player.hand = player.hand.filter((card) => !state.selectedHandIds.has(card.id));
   state.selectedHandIds.clear();
+  state.selectedHandOrder = [];
 
   if (cards[0].kind === 'skill') {
     state.discardPile.push(cards[0]);
@@ -245,6 +256,7 @@ function killBoss(perfect) {
   state.extraZone = [];
   state.currentBoss = state.bossDeck.shift() || null;
   state.selectedDefenseIds.clear();
+  state.selectedDefenseOrder = [];
 
   if (!state.currentBoss) {
     state.phase = 'won';
@@ -295,7 +307,9 @@ function advanceTurn(target) {
   state.phase = 'play';
   state.message = `${currentPlayer().name} 的回合。`;
   state.selectedHandIds.clear();
+  state.selectedHandOrder = [];
   state.selectedDefenseIds.clear();
+  state.selectedDefenseOrder = [];
 }
 
 function chooseNextPlayer(index) {
@@ -307,8 +321,14 @@ function chooseNextPlayer(index) {
 
 function toggleSelection(cardId, mode) {
   const bucket = mode === 'defense' ? state.selectedDefenseIds : state.selectedHandIds;
-  if (bucket.has(cardId)) bucket.delete(cardId);
-  else bucket.add(cardId);
+  const orderKey = mode === 'defense' ? 'selectedDefenseOrder' : 'selectedHandOrder';
+  if (bucket.has(cardId)) {
+    bucket.delete(cardId);
+    state[orderKey] = state[orderKey].filter((id) => id !== cardId);
+  } else {
+    bucket.add(cardId);
+    state[orderKey].push(cardId);
+  }
   render();
 }
 
@@ -365,6 +385,8 @@ function render() {
           ${currentPlayer().hand.map((card) => cardMarkup(card, state.phase === 'defense' ? 'defense' : 'play')).join('')}
         </div>
 
+        ${effectPreviewMarkup(state.phase === 'defense' ? selectedDefenseCards() : selectedPlayCards())}
+
         <div class="action-row">
           <div class="meter">
             <span>出牌点数 ${playTotal}</span>
@@ -395,6 +417,50 @@ function phaseLabel() {
     won: '胜利',
     lost: '失败',
   }[state.phase];
+}
+
+function effectPreviewMarkup(cards) {
+  if (cards.length === 0 || state.phase === 'target-player' || state.phase === 'won' || state.phase === 'lost') {
+    return `
+      <div class="effect-preview empty">
+        <span>花色预览</span>
+        <p>选中手牌后显示花色效果。</p>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="effect-preview">
+      <span>花色预览</span>
+      <div class="effect-list">
+        ${cards.map((card, index) => effectItemMarkup(card, index)).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function effectItemMarkup(card, index) {
+  const boss = state.currentBoss;
+  if (card.kind === 'skill') {
+    return `
+      <div class="effect-item skill-effect">
+        <strong>${index + 1}. 技能卡</strong>
+        <p>无效当前 Boss 的花色压制，并指定下一名玩家。</p>
+      </div>
+    `;
+  }
+
+  const suppressed = state.phase === 'play' && boss && !boss.suitDisabled && card.suit === boss.suit;
+  const effectText = state.phase === 'defense'
+    ? '防御弃牌不触发花色效果。'
+    : `${SUIT_EFFECTS[card.suit]} ${card.value} 点。`;
+
+  return `
+    <div class="effect-item ${suitClass(card)} ${suppressed ? 'suppressed' : ''}">
+      <strong>${index + 1}. ${cardText(card)} ${SUIT_NAME[card.suit]}</strong>
+      <p>${suppressed ? `被 ${bossName(boss)} 压制，效果不触发。` : effectText}</p>
+    </div>
+  `;
 }
 
 function bossMarkup(boss) {

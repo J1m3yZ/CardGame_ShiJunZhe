@@ -307,6 +307,71 @@ h2 {
   font-weight: 700;
 }
 
+.effect-preview {
+  margin-top: 14px;
+  padding: 12px;
+  min-height: 74px;
+  border: 1px solid rgba(244, 240, 231, 0.1);
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.effect-preview > span {
+  display: block;
+  margin-bottom: 8px;
+  color: #b8ad9e;
+  font-size: 12px;
+}
+
+.effect-preview.empty p {
+  margin: 0;
+  color: #8f887d;
+}
+
+.effect-list {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.effect-item {
+  min-width: 190px;
+  max-width: 260px;
+  flex: 1 1 190px;
+  padding: 10px;
+  border-left: 3px solid #d7b35a;
+  background: rgba(0, 0, 0, 0.22);
+}
+
+.effect-item.red {
+  border-left-color: #b73632;
+}
+
+.effect-item.black {
+  border-left-color: #cfc5b5;
+}
+
+.effect-item.skill-effect {
+  border-left-color: #d7b35a;
+}
+
+.effect-item.suppressed {
+  opacity: 0.72;
+  border-left-color: #777;
+}
+
+.effect-item strong {
+  display: block;
+  color: #f4f0e7;
+  font-size: 14px;
+}
+
+.effect-item p {
+  margin: 6px 0 0;
+  color: #cfc5b5;
+  line-height: 1.45;
+  font-size: 13px;
+}
+
 .action-row {
   justify-content: space-between;
   margin-top: 18px;
