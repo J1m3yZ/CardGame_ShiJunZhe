@@ -151,6 +151,38 @@ function validatePlay(cards) {
   return '只能出单张、点数和不超过 10 的对子，或 A 加任意一张。';
 }
 
+function projectTurn(cards, boss) {
+  if (!boss || cards.length === 0 || cards.some((card) => card.kind === 'skill')) {
+    return {
+      rawDamage: 0,
+      damage: 0,
+      projectedHp: boss ? boss.hp : 0,
+      enabledCards: [],
+      enabledSuits: [],
+      blockedSuits: [],
+    };
+  }
+
+  const rawDamage = cards.reduce((sum, card) => sum + card.value, 0);
+  const enabledCards = cards.filter((card) => boss.suitDisabled || card.suit !== boss.suit);
+  const enabledSuits = [...new Set(enabledCards.map((card) => card.suit))];
+  const blockedSuits = [...new Set(cards.filter((card) => !boss.suitDisabled && card.suit === boss.suit).map((card) => card.suit))];
+  let damage = rawDamage;
+
+  if (enabledSuits.includes('clubs')) {
+    damage *= 2;
+  }
+
+  return {
+    rawDamage,
+    damage,
+    projectedHp: Math.max(0, boss.hp - damage),
+    enabledCards,
+    enabledSuits,
+    blockedSuits,
+  };
+}
+
 function playSelected() {
   const boss = state.currentBoss;
   if (!boss || state.phase !== 'play') return;
@@ -180,29 +212,24 @@ function playSelected() {
   }
 
   state.extraZone.push(...cards);
-  const rawDamage = cards.reduce((sum, card) => sum + card.value, 0);
-  let damage = rawDamage;
-  const enabledCards = cards.filter((card) => boss.suitDisabled || card.suit !== boss.suit);
-  const enabledSuits = [...new Set(enabledCards.map((card) => card.suit))];
-  const blockedSuits = [...new Set(cards.filter((card) => !boss.suitDisabled && card.suit === boss.suit).map((card) => card.suit))];
+  const projection = projectTurn(cards, boss);
 
-  enabledSuits.forEach((suit) => {
-    const suitValue = enabledCards.filter((card) => card.suit === suit).reduce((sum, card) => sum + card.value, 0);
+  projection.enabledSuits.forEach((suit) => {
+    const suitValue = projection.enabledCards.filter((card) => card.suit === suit).reduce((sum, card) => sum + card.value, 0);
     if (suit === 'spades') {
       boss.attack = Math.max(0, boss.attack - suitValue);
       pushLog(state, `黑桃削弱 Boss 攻击 ${suitValue} 点。`);
     }
     if (suit === 'hearts') recoverFromDiscard(suitValue);
     if (suit === 'clubs') {
-      damage *= 2;
       pushLog(state, '梅花使本次伤害翻倍。');
     }
     if (suit === 'diamonds') diamondHarvest(suitValue);
   });
 
-  blockedSuits.forEach((suit) => pushLog(state, `${bossName(boss)} 压制了${SUIT_NAME[suit]}效果。`));
-  boss.hp = Math.max(0, boss.hp - damage);
-  pushLog(state, `${player.name} 打出 ${cards.map(cardText).join('、')}，造成 ${damage} 点伤害。`);
+  projection.blockedSuits.forEach((suit) => pushLog(state, `${bossName(boss)} 压制了${SUIT_NAME[suit]}效果。`));
+  boss.hp = projection.projectedHp;
+  pushLog(state, `${player.name} 打出 ${cards.map(cardText).join('、')}，造成 ${projection.damage} 点伤害。`);
 
   if (boss.hp <= 0) {
     killBoss(boss.hp === 0);
@@ -342,8 +369,12 @@ function suitClass(card) {
 
 function render() {
   const boss = state.currentBoss;
-  const playTotal = selectedPlayCards().reduce((sum, card) => sum + card.value, 0);
-  const defenseTotal = selectedDefenseCards().reduce((sum, card) => sum + card.value, 0);
+  const playCards = selectedPlayCards();
+  const defenseCards = selectedDefenseCards();
+  const playTotal = playCards.reduce((sum, card) => sum + card.value, 0);
+  const defenseTotal = defenseCards.reduce((sum, card) => sum + card.value, 0);
+  const playValidation = state.phase === 'play' && playCards.length > 0 ? validatePlay(playCards) : null;
+  const projection = state.phase === 'play' ? projectTurn(playCards, boss) : null;
 
   app.innerHTML = `
     <section class="table">
@@ -385,11 +416,12 @@ function render() {
           ${currentPlayer().hand.map((card) => cardMarkup(card, state.phase === 'defense' ? 'defense' : 'play')).join('')}
         </div>
 
-        ${effectPreviewMarkup(state.phase === 'defense' ? selectedDefenseCards() : selectedPlayCards())}
+        ${effectPreviewMarkup(state.phase === 'defense' ? defenseCards : playCards, playValidation, projection)}
 
         <div class="action-row">
           <div class="meter">
             <span>出牌点数 ${playTotal}</span>
+            ${state.phase === 'play' && boss && playCards.length > 0 && !playValidation ? `<span>预计伤害 ${projection.damage}</span><span>Boss 剩余 ${projection.projectedHp}/${boss.maxHp}</span>` : ''}
             <span>防御点数 ${defenseTotal}${boss ? ` / ${boss.attack}` : ''}</span>
           </div>
           <div class="buttons">
@@ -419,7 +451,7 @@ function phaseLabel() {
   }[state.phase];
 }
 
-function effectPreviewMarkup(cards) {
+function effectPreviewMarkup(cards, validation, projection) {
   if (cards.length === 0 || state.phase === 'target-player' || state.phase === 'won' || state.phase === 'lost') {
     return `
       <div class="effect-preview empty">
@@ -432,14 +464,23 @@ function effectPreviewMarkup(cards) {
   return `
     <div class="effect-preview">
       <span>花色预览</span>
+      ${validation ? `<p class="rule-warning">${validation}</p>` : previewSummaryMarkup(cards, projection)}
       <div class="effect-list">
-        ${cards.map((card, index) => effectItemMarkup(card, index)).join('')}
+        ${cards.map((card, index) => effectItemMarkup(card, index, projection)).join('')}
       </div>
     </div>
   `;
 }
 
-function effectItemMarkup(card, index) {
+function previewSummaryMarkup(cards, projection) {
+  if (state.phase !== 'play' || !state.currentBoss || !projection || cards.some((card) => card.kind === 'skill')) {
+    return '';
+  }
+
+  return `<p class="preview-summary">预计造成 ${projection.damage} 点伤害，Boss 剩余 ${projection.projectedHp}/${state.currentBoss.maxHp}。</p>`;
+}
+
+function effectItemMarkup(card, index, projection) {
   const boss = state.currentBoss;
   if (card.kind === 'skill') {
     return `
@@ -451,9 +492,12 @@ function effectItemMarkup(card, index) {
   }
 
   const suppressed = state.phase === 'play' && boss && !boss.suitDisabled && card.suit === boss.suit;
+  const clubPreview = state.phase === 'play' && card.suit === 'clubs' && projection && !suppressed
+    ? `本次伤害由 ${projection.rawDamage} 点翻倍为 ${projection.damage} 点。`
+    : null;
   const effectText = state.phase === 'defense'
     ? '防御弃牌不触发花色效果。'
-    : `${SUIT_EFFECTS[card.suit]} ${card.value} 点。`;
+    : clubPreview || `${SUIT_EFFECTS[card.suit]} ${card.value} 点。`;
 
   return `
     <div class="effect-item ${suitClass(card)} ${suppressed ? 'suppressed' : ''}">

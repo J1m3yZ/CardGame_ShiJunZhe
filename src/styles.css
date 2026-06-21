@@ -181,33 +181,34 @@ h2 {
 
 .pile-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(120px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(4, minmax(86px, 1fr));
+  gap: 8px;
+  align-content: start;
 }
 
 .pile {
-  min-height: 158px;
-  padding: 16px;
+  min-height: 72px;
+  padding: 10px;
   display: grid;
   align-content: center;
   justify-items: center;
-  gap: 10px;
+  gap: 4px;
   background: rgba(255, 255, 255, 0.055);
   border: 1px solid rgba(255, 255, 255, 0.09);
 }
 
 .deck-back {
-  width: 68px;
-  height: 94px;
-  border-radius: 8px;
-  background:
-    linear-gradient(135deg, transparent 25%, rgba(255, 255, 255, 0.18) 25% 30%, transparent 30% 55%, rgba(255, 255, 255, 0.18) 55% 60%, transparent 60%),
-    #8f2e2e;
-  border: 2px solid rgba(255, 255, 255, 0.58);
+  display: none;
+}
+
+.pile span {
+  color: #cfc5b5;
+  font-size: 13px;
 }
 
 .pile strong {
-  font-size: 24px;
+  font-size: 26px;
+  line-height: 1;
 }
 
 .players {
@@ -325,6 +326,21 @@ h2 {
 .effect-preview.empty p {
   margin: 0;
   color: #8f887d;
+}
+
+.preview-summary,
+.rule-warning {
+  margin: 0 0 10px;
+  line-height: 1.45;
+  font-size: 13px;
+}
+
+.preview-summary {
+  color: #d7b35a;
+}
+
+.rule-warning {
+  color: #ffb0a6;
 }
 
 .effect-list {
